@@ -11,6 +11,4 @@ object Types {
 
     // OKHTTP
     val OKHTTP_INTERCEPTOR = Type.getType("Lokhttp3/Interceptor;")
-    val INSTRUMENTED_OKHTTP_INTERCEPTOR =
-        Type.getType("Lcom/sandymist/mobile/plugins/network/NetworkPlugin;")
 }

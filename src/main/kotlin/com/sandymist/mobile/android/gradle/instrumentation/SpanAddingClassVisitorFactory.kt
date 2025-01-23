@@ -47,6 +47,9 @@ abstract class SpanAddingClassVisitorFactory :
 
         @get:Internal
         var _instrumentable: ClassInstrumentable?
+
+        @get:Input
+        val targetClassName: Property<String>
     }
 
     private val instrumentable: ClassInstrumentable

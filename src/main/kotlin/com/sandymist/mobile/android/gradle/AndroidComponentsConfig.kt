@@ -13,9 +13,6 @@ import com.sandymist.mobile.android.gradle.InterceptorPlugin.Companion.sep
 import com.sandymist.mobile.android.gradle.extensions.InterceptorPluginExtension
 import com.sandymist.mobile.android.gradle.instrumentation.SpanAddingClassVisitorFactory
 import com.sandymist.mobile.android.gradle.services.InterceptorModulesService
-import com.sandymist.mobile.android.gradle.transforms.MetaInfStripTransform
-import com.sandymist.mobile.android.gradle.util.AgpVersions
-import com.sandymist.mobile.android.gradle.util.AgpVersions.isAGP74
 import com.sandymist.mobile.android.gradle.util.collectModules
 import org.gradle.api.Project
 import java.io.File
@@ -28,7 +25,7 @@ fun AndroidComponentsExtension<*, *, *>.configure(
     val tmpDir = File("${project.buildDir}${sep}tmp${sep}interceptor")
     tmpDir.mkdirs()
 
-    fun isTraceable(buildType: String) = buildType == "debug" || buildType == "dogfood"
+    fun isTraceable(buildType: String) = buildType == "debug" || buildType == "dogfood" || buildType == "qa"
 
     configureVariants { variant ->
         val buildType = variant.buildType ?: ""
@@ -64,30 +61,7 @@ fun AndroidComponentsExtension<*, *, *>.configure(
                 )
                 params.interceptorModulesService.setDisallowChanges(interceptorModulesService)
                 params.tmpDir.set(tmpDir)
-            }
-
-            /**
-             * This necessary to address the issue when target app uses a multi-release jar
-             * (MR-JAR) as a dependency. https://github.com/getsentry/sentry-android-gradle-plugin/issues/256
-             *
-             * We register a transform (https://docs.gradle.org/current/userguide/artifact_transforms.html)
-             * that will strip-out unnecessary files from the MR-JAR, so the AGP transforms
-             * will consume corrected artifacts. We only do this when auto-instrumentation is
-             * enabled (otherwise there's no need in this fix) AND when AGP version
-             * is below 7.1.2, where this issue has been fixed.
-             * (https://androidstudio.googleblog.com/2022/02/android-studio-bumblebee-202111-patch-2.html)
-             */
-            if (AgpVersions.CURRENT < AgpVersions.VERSION_7_1_2) {
-                // we are only interested in runtime configuration (as ASM transform is
-                // also run just for the runtime configuration)
-                project.configurations.named("${variant.name}RuntimeClasspath")
-                    .configure {
-                        it.attributes.attribute(MetaInfStripTransform.metaInfStripped, true)
-                    }
-                MetaInfStripTransform.register(
-                    project.dependencies,
-                    extension.tracingInstrumentation.forceInstrumentDependencies.get()
-                )
+                params.targetClassName.setDisallowChanges(extension.targetClassName.get())
             }
         }
     }
@@ -99,23 +73,12 @@ private fun <T : InstrumentationParameters> Variant.configureInstrumentation(
     mode: FramesComputationMode,
     instrumentationParamsConfig: (T) -> Unit,
 ) {
-    if (isAGP74) {
-        configureInstrumentationFor74(
-            variant = this,
-            classVisitorFactoryImplClass,
-            scope,
-            mode,
-            instrumentationParamsConfig
-        )
-    } else {
-        configureInstrumentationFor70(
-            variant = this,
-            classVisitorFactoryImplClass,
-            scope,
-            mode,
-            instrumentationParamsConfig
-        )
-    }
+    instrumentation.transformClassesWith(
+        classVisitorFactoryImplClass,
+        scope,
+        instrumentationParamsConfig
+    )
+    instrumentation.setAsmFramesComputationMode(mode)
 }
 
 /**
@@ -123,9 +86,5 @@ private fun <T : InstrumentationParameters> Variant.configureInstrumentation(
  * have to distinguish here, although the compatibility sources would look exactly the same.
  */
 private fun AndroidComponentsExtension<*, *, *>.configureVariants(callback: (Variant) -> Unit) {
-    if (isAGP74) {
-        onVariants74(this, callback)
-    } else {
-        onVariants70(this, callback)
-    }
+    onVariants(callback = callback)
 }

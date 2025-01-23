@@ -42,7 +42,8 @@ class ResponseWithInterceptorChain : MethodInstrumentable {
         originalVisitor = originalVisitor,
         access = instrumentableContext.access,
         name = instrumentableContext.name,
-        descriptor = instrumentableContext.descriptor
+        descriptor = instrumentableContext.descriptor,
+        parameters = parameters,
     )
 
     override fun isInstrumentable(data: MethodContext): Boolean {

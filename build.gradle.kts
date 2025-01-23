@@ -1,5 +1,4 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.sandymist.mobile.android.gradle.internal.ASMifyTask
 import com.sandymist.mobile.android.gradle.internal.BootstrapAndroidSdk
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -21,6 +20,7 @@ plugins {
     // we need this plugin in order to include .aar dependencies into a pure java project, which the gradle plugin is
     id("com.stepango.aar2jar") version BuildPluginsVersion.AAR_2_JAR
     id("com.github.johnrengelman.shadow") version BuildPluginsVersion.SHADOW
+    id("com.gradle.plugin-publish") version "1.3.0"
 }
 
 repositories {
@@ -29,13 +29,12 @@ repositories {
 }
 
 group = "com.sandymist.mobile"
-version = "0.1.1"
+version = "0.1.2"
 
 BootstrapAndroidSdk.locateAndroidSdk(project, extra)
 
 val testImplementationAar by configurations.getting // this converts .aar into .jar dependencies
 
-val agp70: SourceSet by sourceSets.creating
 val agp74: SourceSet by sourceSets.creating
 
 val shade: Configuration by configurations.creating {
@@ -46,15 +45,11 @@ val shade: Configuration by configurations.creating {
 val fixtureClasspath: Configuration by configurations.creating
 
 dependencies {
-    agp70.compileOnlyConfigurationName(Libs.GRADLE_API)
-    agp70.compileOnlyConfigurationName(Libs.agp("7.0.4"))
-
     agp74.compileOnlyConfigurationName(Libs.GRADLE_API)
     agp74.compileOnlyConfigurationName(Libs.agp("7.4.0"))
 
     compileOnly(Libs.GRADLE_API)
     compileOnly(Libs.AGP)
-    compileOnly(agp70.output)
     compileOnly(agp74.output)
     compileOnly(Libs.PROGUARD)
 
@@ -64,9 +59,7 @@ dependencies {
     testImplementation(gradleTestKit())
     testImplementation(kotlin("test"))
     testImplementation(Libs.AGP)
-    testImplementation(agp70.output)
     testImplementation(agp74.output)
-    fixtureClasspath(agp70.output)
     fixtureClasspath(agp74.output)
     testImplementation(Libs.PROGUARD)
     testImplementation(Libs.JUNIT)
@@ -117,12 +110,19 @@ gradlePlugin {
         register("interceptorPlugin") {
             id = "com.sandymist.mobile.plugin.interceptor"
             implementationClass = "com.sandymist.mobile.android.gradle.InterceptorPlugin"
+            displayName = "Interceptor Plugin for Android"
         }
     }
 }
 
+pluginBundle {
+    website = "https://github.com/saravr/interceptor-plugin"
+    vcsUrl = "https://github.com/saravr/interceptor-plugin"
+    description = "Network interceptor plugin for Android"
+    tags = listOf("android", "interceptor", "okhttp")
+}
+
 tasks.withType<Jar> {
-    from(agp70.output)
     from(agp74.output)
 }
 

@@ -7,12 +7,12 @@ This plugin can be used to provide an OkHTTP3 interceptor (may be as part of a l
 ## Subclass okhttp3 `Interceptor`
 
 ```
-package com.sandymist.mobile.plugins.network
+package com.example.plugin.network
 
 import okhttp3.Interceptor
 import okhttp3.Response
 
-class NetworkPlugin: Interceptor {
+class NetworkInterceptor: Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
 
@@ -22,9 +22,13 @@ class NetworkPlugin: Interceptor {
 }
 ```
 
-Note: The package name will be customizable in a future release, but for now, it has to be as mentioned here.
+Specify interceptor in the app or library gradle file (if not present, no instrumentation will be applied)
 
-
+```
+interceptor {
+    targetClassName = "com.example.plugin.network.NetworkInterceptor"
+}
+```
 ## Apply the Gradle plugin in your app or library
 
 ```

@@ -1,5 +1,4 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.sandymist.mobile.android.gradle.internal.ASMifyTask
 import com.sandymist.mobile.android.gradle.internal.BootstrapAndroidSdk
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -30,7 +29,7 @@ repositories {
 }
 
 group = "com.sandymist.mobile"
-version = "0.1.1-CFG11"
+version = "0.1.1-CFG12"
 
 BootstrapAndroidSdk.locateAndroidSdk(project, extra)
 

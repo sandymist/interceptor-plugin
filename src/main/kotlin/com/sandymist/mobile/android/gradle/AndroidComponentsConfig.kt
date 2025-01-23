@@ -24,11 +24,13 @@ fun AndroidComponentsExtension<*, *, *>.configure(
     // temp folder for sentry-related stuff
     val tmpDir = File("${project.buildDir}${sep}tmp${sep}interceptor")
     tmpDir.mkdirs()
+    println("++++ ENTERING CONFIGURE")
 
     fun isTraceable(buildType: String) = buildType == "debug" || buildType == "dogfood" || buildType == "qa"
 
     configureVariants { variant ->
         val buildType = variant.buildType ?: ""
+        println("++++ BUILDTYPE: $buildType")
         if (isTraceable(buildType) && extension.tracingInstrumentation.enabled.get()) {
             /**
              * We detect sentry-android SDK version using configurations.incoming.afterResolve.
@@ -61,6 +63,9 @@ fun AndroidComponentsExtension<*, *, *>.configure(
                 )
                 params.interceptorModulesService.setDisallowChanges(interceptorModulesService)
                 params.tmpDir.set(tmpDir)
+                println("++++ PARAM TC: " + params.targetClassName)
+                println("++++ >>>> TARET CLASS NAME: " + extension.targetClassName.get())
+                params.targetClassName.setDisallowChanges(extension.targetClassName.get())
             }
         }
     }

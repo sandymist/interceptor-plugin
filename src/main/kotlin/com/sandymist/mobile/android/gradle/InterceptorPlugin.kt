@@ -19,6 +19,10 @@ class InterceptorPlugin : Plugin<Project> {
                 project.extensions.getByType(AndroidComponentsExtension::class.java)
             androidComponentsExt.configure(project, extension)
         }
+
+        project.afterEvaluate {
+            println("Custom Parameter Target Class: ${extension.targetClassName.get()}")
+        }
     }
 
     companion object {

@@ -29,7 +29,7 @@ repositories {
 }
 
 group = "com.sandymist.mobile"
-version = "0.1.2"
+version = "0.1.3"
 
 BootstrapAndroidSdk.locateAndroidSdk(project, extra)
 
@@ -116,8 +116,8 @@ gradlePlugin {
 }
 
 pluginBundle {
-    website = "https://github.com/saravr/interceptor-plugin"
-    vcsUrl = "https://github.com/saravr/interceptor-plugin"
+    website = "https://github.com/sandymist/interceptor-plugin"
+    vcsUrl = "https://github.com/sandymist/interceptor-plugin"
     description = "Network interceptor plugin for Android"
     tags = listOf("android", "interceptor", "okhttp")
 }

@@ -30,13 +30,12 @@ repositories {
 }
 
 group = "com.sandymist.mobile"
-version = "0.1.1-CFG5"
+version = "0.1.1-CFG6"
 
 BootstrapAndroidSdk.locateAndroidSdk(project, extra)
 
 val testImplementationAar by configurations.getting // this converts .aar into .jar dependencies
 
-val agp70: SourceSet by sourceSets.creating
 val agp74: SourceSet by sourceSets.creating
 
 val shade: Configuration by configurations.creating {
@@ -47,15 +46,11 @@ val shade: Configuration by configurations.creating {
 val fixtureClasspath: Configuration by configurations.creating
 
 dependencies {
-    agp70.compileOnlyConfigurationName(Libs.GRADLE_API)
-    agp70.compileOnlyConfigurationName(Libs.agp("7.0.4"))
-
     agp74.compileOnlyConfigurationName(Libs.GRADLE_API)
     agp74.compileOnlyConfigurationName(Libs.agp("7.4.0"))
 
     compileOnly(Libs.GRADLE_API)
     compileOnly(Libs.AGP)
-    compileOnly(agp70.output)
     compileOnly(agp74.output)
     compileOnly(Libs.PROGUARD)
 
@@ -65,9 +60,7 @@ dependencies {
     testImplementation(gradleTestKit())
     testImplementation(kotlin("test"))
     testImplementation(Libs.AGP)
-    testImplementation(agp70.output)
     testImplementation(agp74.output)
-    fixtureClasspath(agp70.output)
     fixtureClasspath(agp74.output)
     testImplementation(Libs.PROGUARD)
     testImplementation(Libs.JUNIT)
@@ -131,7 +124,6 @@ pluginBundle {
 }
 
 tasks.withType<Jar> {
-    from(agp70.output)
     from(agp74.output)
 }
 

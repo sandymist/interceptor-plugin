@@ -1,9 +1,11 @@
 package com.sandymist.mobile.android.gradle.instrumentation.okhttp.visitor
 
+import com.sandymist.mobile.android.gradle.instrumentation.SpanAddingClassVisitorFactory
 import com.sandymist.mobile.android.gradle.instrumentation.util.Types
 import org.objectweb.asm.Label
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
+import org.objectweb.asm.Type
 import org.objectweb.asm.commons.GeneratorAdapter
 import org.objectweb.asm.commons.Method
 
@@ -12,7 +14,8 @@ class ResponseWithInterceptorChainMethodVisitor(
     private val originalVisitor: MethodVisitor,
     access: Int,
     name: String?,
-    descriptor: String?
+    descriptor: String?,
+    private val parameters: SpanAddingClassVisitorFactory.SpanAddingParameters
 ) : GeneratorAdapter(api, originalVisitor, access, name, descriptor) {
 
     private var shouldInstrument = false
@@ -36,7 +39,7 @@ class ResponseWithInterceptorChainMethodVisitor(
     override fun visitInsn(opcode: Int) {
         super.visitInsn(opcode)
         if (opcode == Opcodes.POP && shouldInstrument) {
-            visitAddInterceptor()
+            visitAddInterceptor(parameters.targetClassName.get())
             shouldInstrument = false
         }
     }
@@ -48,7 +51,10 @@ class ResponseWithInterceptorChainMethodVisitor(
        interceptors += MyOkHttpInterceptor()
      }
      */
-    private fun MethodVisitor.visitAddInterceptor() {
+    private fun MethodVisitor.visitAddInterceptor(targetClassName: String) {
+        println("Target class: " + targetClassName.toJvmDescriptor())
+        val targetClassType = Type.getType(targetClassName.toJvmDescriptor())
+
         originalVisitor.visitVarInsn(Opcodes.ALOAD, 1) // interceptors list
 
         checkCast(Types.ITERABLE)
@@ -69,7 +75,7 @@ class ResponseWithInterceptorChainMethodVisitor(
         storeLocal(interceptorIndex)
         loadLocal(interceptorIndex)
         checkCast(Types.OKHTTP_INTERCEPTOR)
-        instanceOf(Types.INSTRUMENTED_OKHTTP_INTERCEPTOR)
+        instanceOf(targetClassType)
         ifZCmp(EQ, whileLabel)
         loadLocal(interceptorIndex)
         val ifLabel = Label()
@@ -83,13 +89,17 @@ class ResponseWithInterceptorChainMethodVisitor(
 
         originalVisitor.visitVarInsn(Opcodes.ALOAD, 1)
         checkCast(Types.COLLECTION)
-        newInstance(Types.INSTRUMENTED_OKHTTP_INTERCEPTOR)
+        newInstance(targetClassType)
         dup()
         val interceptorOkHttpCtor = Method.getMethod("void <init> ()")
-        invokeConstructor(Types.INSTRUMENTED_OKHTTP_INTERCEPTOR, interceptorOkHttpCtor)
+        invokeConstructor(targetClassType, interceptorOkHttpCtor)
         val addInterceptor = Method.getMethod("boolean add (Object)")
         invokeInterface(Types.COLLECTION, addInterceptor)
         pop()
         visitLabel(originalMethodLabel)
     }
+}
+
+fun String.toJvmDescriptor(): String {
+    return "L" + this.replace('.', '/') + ";"
 }

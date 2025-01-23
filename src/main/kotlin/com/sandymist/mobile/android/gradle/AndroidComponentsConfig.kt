@@ -13,7 +13,6 @@ import com.sandymist.mobile.android.gradle.InterceptorPlugin.Companion.sep
 import com.sandymist.mobile.android.gradle.extensions.InterceptorPluginExtension
 import com.sandymist.mobile.android.gradle.instrumentation.SpanAddingClassVisitorFactory
 import com.sandymist.mobile.android.gradle.services.InterceptorModulesService
-import com.sandymist.mobile.android.gradle.util.AgpVersions.isAGP74
 import com.sandymist.mobile.android.gradle.util.collectModules
 import org.gradle.api.Project
 import java.io.File
@@ -26,7 +25,7 @@ fun AndroidComponentsExtension<*, *, *>.configure(
     val tmpDir = File("${project.buildDir}${sep}tmp${sep}interceptor")
     tmpDir.mkdirs()
 
-    fun isTraceable(buildType: String) = buildType == "debug" || buildType == "dogfood"
+    fun isTraceable(buildType: String) = buildType == "debug" || buildType == "dogfood" || buildType == "qa"
 
     configureVariants { variant ->
         val buildType = variant.buildType ?: ""
@@ -73,23 +72,12 @@ private fun <T : InstrumentationParameters> Variant.configureInstrumentation(
     mode: FramesComputationMode,
     instrumentationParamsConfig: (T) -> Unit,
 ) {
-    if (isAGP74) {
-        configureInstrumentationFor74(
-            variant = this,
-            classVisitorFactoryImplClass,
-            scope,
-            mode,
-            instrumentationParamsConfig
-        )
-    } else {
-        configureInstrumentationFor70(
-            variant = this,
-            classVisitorFactoryImplClass,
-            scope,
-            mode,
-            instrumentationParamsConfig
-        )
-    }
+    instrumentation.transformClassesWith(
+        classVisitorFactoryImplClass,
+        scope,
+        instrumentationParamsConfig
+    )
+    instrumentation.setAsmFramesComputationMode(mode)
 }
 
 /**
@@ -97,9 +85,5 @@ private fun <T : InstrumentationParameters> Variant.configureInstrumentation(
  * have to distinguish here, although the compatibility sources would look exactly the same.
  */
 private fun AndroidComponentsExtension<*, *, *>.configureVariants(callback: (Variant) -> Unit) {
-    if (isAGP74) {
-        onVariants74(this, callback)
-    } else {
-        onVariants70(this, callback)
-    }
+    onVariants(callback = callback)
 }

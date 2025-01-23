@@ -1,6 +1,6 @@
 package com.sandymist.mobile.android.gradle.instrumentation.okhttp
 
-// Sample network interceptor class
+// Template for network interceptor class
 /*
 class NetworkInterceptor: Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
